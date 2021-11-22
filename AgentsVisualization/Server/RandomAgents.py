@@ -37,13 +37,20 @@ class RandomAgent(Agent):
             moore=True, # Boolean for whether to use Moore neighborhood (including diagonals) or Von Neumann (only up/down/left/right).
             include_center=True) 
         
+        # Check if box in cell to move: 
+        #   presentInCell = self.model.grid.get_cell_list_contents([possible_steps[self.direction]])
+        #   if(presentInCell[0].tag == "box"):
+        #   "Pick Up" (ignore that agent from the model, the gameObject becomes child from the agent)
+        #   Make the agent return home (a* pathfinding)
+
         # Checks which grid cells are empty
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
 
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
         if freeSpaces[self.direction]:
+            print(f"Se mueve de {self.pos}", end = " ")
             self.model.grid.move_agent(self, possible_steps[self.direction])
-            print(f"Se mueve de {self.pos} a {possible_steps[self.direction]}; direction {self.direction}")
+            print(f"a {possible_steps[self.direction]}; direction {self.direction}")
         else:
             print(f"No se puede mover de {self.pos} en esa direccion.")
 
@@ -59,8 +66,9 @@ class ObstacleAgent(Agent):
     """
     Obstacle agent. Just to add obstacles to the grid.
     """
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, tag):
         super().__init__(unique_id, model)
+        self.tag = tag
 
     def step(self):
         pass   
@@ -72,8 +80,10 @@ class RandomModel(Model):
         N: Number of agents in the simulation
         height, width: The size of the grid to model
     """
-    def __init__(self, N, width, height):
+    def __init__(self, N, max_shelves, N_boxes, width, height):
         self.num_agents = N
+        self.shelves = self.random.randrange(max_shelves)
+        self.num_boxes = N_boxes
         self.grid = Grid(width,height,torus = False) 
         self.schedule = RandomActivation(self)
         self.running = True 
@@ -81,10 +91,33 @@ class RandomModel(Model):
         # Creates the border of the grid
         border = [(x,y) for y in range(height) for x in range(width) if y in [0, height-1] or x in [0, width - 1]]
 
+        # Add the barriers at the border
         for pos in border:
-            obs = ObstacleAgent(pos, self)
+            obs = ObstacleAgent(pos, self, "border")
             self.schedule.add(obs)
             self.grid.place_agent(obs, pos)
+
+        # Add shelves to a random empty grid cell
+        for i in range(self.shelves):
+            obj = ObstacleAgent(i, self, "shelve") 
+            self.schedule.add(obj)
+
+            pos_gen = lambda w, h: (self.random.randrange(w), self.random.randrange(h))
+            pos = pos_gen(self.grid.width, self.grid.height)
+            while (not self.grid.is_cell_empty(pos)):
+                pos = pos_gen(self.grid.width, self.grid.height)
+            self.grid.place_agent(obj, pos)
+
+        # Add boxes to a random empty grid cell
+        for i in range(self.num_boxes):
+            obj = ObstacleAgent(i, self, "box") 
+            self.schedule.add(obj)
+
+            pos_gen = lambda w, h: (self.random.randrange(w), self.random.randrange(h))
+            pos = pos_gen(self.grid.width, self.grid.height)
+            while (not self.grid.is_cell_empty(pos)):
+                pos = pos_gen(self.grid.width, self.grid.height)
+            self.grid.place_agent(obj, pos)
 
         # Add the agent to a random empty grid cell
         for i in range(self.num_agents):

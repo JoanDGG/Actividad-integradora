@@ -7,6 +7,8 @@ from RandomAgents import *
 
 # Size of the board:
 number_agents = 10
+max_shelves = 5
+number_boxes = 10
 width = 28
 height = 28
 trafficModel = None
@@ -18,17 +20,19 @@ app = Flask("Traffic example")
 
 @app.route('/init', methods=['POST', 'GET'])
 def initModel():
-    global currentStep, trafficModel, number_agents, width, height
+    global currentStep, trafficModel, number_agents, max_shelves, number_boxes, width, height
 
     if request.method == 'POST':
         number_agents = int(request.form.get('NAgents'))
+        number_boxes = int(request.form.get('NBoxes'))
         width = int(request.form.get('width'))
         height = int(request.form.get('height'))
         currentStep = 0
 
         print(request.form)
-        print(number_agents, width, height)
-        trafficModel = RandomModel(number_agents, width, height)
+        print(number_agents, max_shelves, number_boxes, width, height)
+        trafficModel = RandomModel(number_agents, max_shelves, number_boxes, width, height)
+        print("MODEL: ", trafficModel)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
 
@@ -46,9 +50,9 @@ def getObstacles():
     global trafficModel
 
     if request.method == 'GET':
-        carPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in trafficModel.grid.coord_iter() if isinstance(a, ObstacleAgent)]
-
-        return jsonify({'positions':carPositions})
+        obstaclePositions = [{"x": x, "y":1, "z":z} for (a, x, z) in trafficModel.grid.coord_iter() if isinstance(a, ObstacleAgent)]
+        # Get tag(s) and add to jsonify
+        return jsonify({'positions':obstaclePositions})
 
 @app.route('/update', methods=['GET'])
 def updateModel():

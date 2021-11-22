@@ -36,7 +36,7 @@ public class AgentController : MonoBehaviour
     bool hold = false;
 
     public GameObject carPrefab, obstaclePrefab, floor;
-    public int NAgents, width, height;
+    public int NAgents, NBoxes, width, height;
     public float timeToUpdate = 5.0f, timer, dt;
 
     void Start()
@@ -106,6 +106,7 @@ public class AgentController : MonoBehaviour
         WWWForm form = new WWWForm();
 
         form.AddField("NAgents", NAgents.ToString());
+        form.AddField("NBoxes", NBoxes.ToString());
         form.AddField("width", width.ToString());
         form.AddField("height", height.ToString());
 
@@ -160,7 +161,7 @@ public class AgentController : MonoBehaviour
         else 
         {
             obstacleData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
-
+            // Recieve tags from json and check for instantiation
             Debug.Log(obstacleData.positions);
 
             foreach(Vector3 position in obstacleData.positions)
