@@ -3,7 +3,7 @@
 # Octavio Navarro. October 2021
 
 from flask import Flask, request, jsonify
-from RandomAgents import *
+from RobotAgents import *
 
 # Size of the board:
 number_agents = 10
@@ -11,7 +11,7 @@ max_shelves = 5
 number_boxes = 10
 width = 28
 height = 28
-trafficModel = None
+warehouse_model = None
 currentStep = 0
 
 app = Flask("Traffic example")
@@ -20,7 +20,7 @@ app = Flask("Traffic example")
 
 @app.route('/init', methods=['POST', 'GET'])
 def initModel():
-    global currentStep, trafficModel, number_agents, max_shelves, number_boxes, width, height
+    global currentStep, warehouse_model, number_agents, max_shelves, number_boxes, width, height
 
     if request.method == 'POST':
         number_agents = int(request.form.get('NAgents'))
@@ -31,26 +31,26 @@ def initModel():
 
         print(request.form)
         print(number_agents, max_shelves, number_boxes, width, height)
-        trafficModel = RandomModel(number_agents, max_shelves, number_boxes, width, height)
-        print("MODEL: ", trafficModel)
+        warehouse_model = RobotModel(number_agents, max_shelves, number_boxes, width, height)
+        print("MODEL: ", warehouse_model)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
 
 @app.route('/getAgents', methods=['GET'])
 def getAgents():
-    global trafficModel
+    global warehouse_model
 
     if request.method == 'GET':
-        carPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in trafficModel.grid.coord_iter() if isinstance(a, RandomAgent)]
+        carPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
 
         return jsonify({'positions':carPositions})
 
 @app.route('/getObstacles', methods=['GET'])
 def getObstacles():
-    global trafficModel
+    global warehouse_model
 
     if request.method == 'GET':
-        obstaclePositions = [{"x": x, "y":1, "z":z} for (a, x, z) in trafficModel.grid.coord_iter() if isinstance(a, ObstacleAgent)]
+        obstaclePositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)]
         # Get tag(s) and add to jsonify
         return jsonify({'positions':obstaclePositions})
 
@@ -58,7 +58,7 @@ def getObstacles():
 def updateModel():
     global currentStep, trafficModel
     if request.method == 'GET':
-        trafficModel.step()
+        warehouse_model.step()
         currentStep += 1
         return jsonify({'message':f'Model updated to step {currentStep}.', 'currentStep':currentStep})
 
