@@ -41,9 +41,10 @@ def getAgents():
     global warehouse_model
 
     if request.method == 'GET':
-        carPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
-
-        return jsonify({'positions':carPositions})
+        robotPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
+        # mandar numero de cajas droppeadas
+        # mandar has box de robots
+        return jsonify({'positions':robotPositions})
 
 @app.route('/getObstacles', methods=['GET'])
 def getObstacles():

@@ -26,6 +26,7 @@ class RobotAgent(Agent):
             model: Model reference for the agent
         """
         super().__init__(unique_id, model)
+        self.has_box = False
 
     def move(self):
         """ 
@@ -33,23 +34,48 @@ class RobotAgent(Agent):
         """
         possible_steps = self.model.grid.get_neighborhood(
             self.pos,
-            moore=False, # Boolean for whether to use Moore neighborhood (including diagonals) or Von Neumann (only up/down/left/right).
-            include_center=True) 
-        cell_to_move = RobotModel.random.randrange(possible_steps)
-        # Check if box in cell to move: 
-        #   presentInCell = self.model.grid.get_cell_list_contents([possible_steps[self.direction]])
-        #   if(presentInCell[0].tag == "box"):
-        #   "Pick Up" (ignore that agent from the model, the gameObject becomes child from the agent)
-        #   Make the agent return home (a* pathfinding)
+            moore = False, # Boolean for whether to use Moore neighborhood (including diagonals) or Von Neumann (only up/down/left/right).
+            include_center = False)
+
+        box = None
+        presentInCell = self.model.grid.get_cell_list_contents(possible_steps)
+        for cell in presentInCell:
+
+            if(cell[0].tag == "box"):
+                box = cell[0]
+
+        if(self.has_box and self.model.drop_zone in possible_steps):
+            # Dejar caja
+            self.model.boxes_dropped += 1
+            self.has_box = False
+
+        elif(box and not self.has_box):
+            #paso 2
+            self.model.remove_agent(box)
+            self.has_box = True
 
         # Checks which grid cells are empty
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
 
+        if(self.has_box):
+            #paso 3
+            distance = 999999
+            index_min_distance = None
+            for index, cell in enumerate(freeSpaces):
+                distance_from_cell = self.model.sqrt((cell.pos.x - self.model.drop_zone[0])**2+(cell.pos.y - self.model.drop_zone[1])**2)
+                if(distance_from_cell < distance):
+                    distance = distance_from_cell
+                    index_min_distance = index
+            if(index_min_distance):
+                cell_to_move = freeSpaces[index_min_distance]
+        else:
+            cell_to_move = self.model.random.choice(freeSpaces)
+
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
-        if freeSpaces[self.direction]:
+        if cell_to_move:
             print(f"Se mueve de {self.pos}", end = " ")
-            self.model.grid.move_agent(self, possible_steps[self.direction])
-            print(f"a {possible_steps[self.direction]}; direction {self.direction}")
+            self.model.grid.move_agent(self, cell_to_move)
+            print(f"a {cell_to_move}")                
         else:
             print(f"No se puede mover de {self.pos} en esa direccion.")
 
@@ -57,7 +83,6 @@ class RobotAgent(Agent):
         """ 
         Determines the new direction it will take, and then moves
         """
-        print(f"Agente: {self.unique_id} movimiento {self.direction}")
         self.move()
 
 class ObstacleAgent(Agent):
@@ -84,7 +109,9 @@ class RobotModel(Model):
         self.num_boxes = N_boxes
         self.grid = Grid(width,height,torus = False) 
         self.schedule = RandomActivation(self)
-        self.running = True 
+        self.running = True
+        self.drop_zone = (self.random.randrange(self.grid.width), self.random.randrange(self.grid.height))
+        self.boxes_dropped = 0
 
         # Creates the border of the grid
         border = [(x,y) for y in range(height) for x in range(width) if y in [0, height-1] or x in [0, width - 1]]
