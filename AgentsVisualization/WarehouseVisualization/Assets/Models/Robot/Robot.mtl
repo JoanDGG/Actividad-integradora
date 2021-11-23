@@ -1,0 +1,187 @@
+# Blender MTL File: 'Robot.blend'
+# Material Count: 14
+
+newmtl Body1
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.184837 0.000532
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Body1_Normal.png
+map_Kd Textures\\Robot_Body1_BaseColor.png
+map_Ns Textures\\Robot_Body1_Roughness.png
+refl Textures\\Robot_Body1_Metallic.png
+
+newmtl Body2
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.018340 0.015895
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Body2_Normal.png
+map_Kd Textures\\Robot_Body2_BaseColor.png
+map_Ns Textures\\Robot_Body2_Roughness.png
+refl Textures\\Robot_Body2_Metallic.png
+
+newmtl Bolts
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.576241 0.800000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Bolts_Normal.png
+map_Kd Textures\\Robot_Bolts_BaseColor.png
+refl Textures\\Robot_Bolts_Metallic.png
+
+newmtl Cables
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.142288 0.090150
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Cables_Normal.png
+map_Kd Textures\\Robot_Cables_BaseColor.png
+map_Ns Textures\\Robot_Cables_Roughness.png
+refl Textures\\Robot_Cables_Metallic.png
+
+newmtl Engine1
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.298691 0.120013
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Engine1_Normal.png
+map_Kd Textures\\Robot_Engine1_BaseColor.png
+map_Ns Textures\\Robot_Engine1_Roughness.png
+refl Textures\\Robot_Engine1_Metallic.png
+
+newmtl Engine2
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.163657 0.356803
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Engine2_Normal.png
+map_Kd Textures\\Robot_Engine2_BaseColor.png
+refl Textures\\Robot_Engine2_Metallic.png
+
+newmtl Flaps
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.000000 0.220325
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Flaps_Normal.png
+map_Kd Textures\\Robot_Flaps_BaseColor.png
+map_Ns Textures\\Robot_Flaps_Roughness.png
+refl Textures\\Robot_Flaps_Metallic.png
+
+newmtl Handles
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.011421 0.800000 0.777145
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Handles_Normal.png
+map_Kd Textures\\Robot_Handles_BaseColor.png
+map_Ns Textures\\Robot_Handles_Roughness.png
+refl Textures\\Robot_Handles_Metallic.png
+
+newmtl Lens
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.170825 0.000000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Lens_Normal.png
+map_Kd Textures\\Robot_Lens_BaseColor.png
+map_Ns Textures\\Robot_Lens_Roughness.png
+refl Textures\\Robot_Lens_Metallic.png
+
+newmtl Pipes
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.100348 0.093618
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Bump Textures\\Robot_Pipes_Normal.png
+map_Kd Textures\\Robot_Pipes_Metallic.png
+map_Ns Textures\\Robot_Pipes_Roughness.png
+
+newmtl Stickers1
+Ns 671.281009
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Stickers2
+Ns 671.281009
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Suspension
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.092667 0.800000 0.023062
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_Suspension_Normal.png
+map_Kd Textures\\Robot_Suspension_BaseColor.png
+map_Ns Textures\\Robot_Suspension_Roughness.png
+refl Textures\\Robot_Suspension_Metallic.png
+
+newmtl details
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.086674 0.030582 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump Textures\\Robot_details_Normal.png
+map_Kd Textures\\Robot_details_BaseColor.png
+map_Ns Textures\\Robot_details_Roughness.png
+refl Textures\\Robot_details_Metallic.png
