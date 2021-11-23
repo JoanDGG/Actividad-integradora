@@ -9,16 +9,22 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
+/*
 public class CarData
 {
     public int uniqueID;
     public Vector3 position;
 }
-
+*/
+public class ObstacleData
+{
+    public float x, y, z;
+    public string tag;
+}
 public class AgentData
 {
-    public List<Vector3> positions;
-    public List<bool> robotsHaveBoxes;
+    public float x, y, z;
+    public bool robotHasBox;
 }
 
 public class AgentController : MonoBehaviour
@@ -27,23 +33,25 @@ public class AgentController : MonoBehaviour
     string serverUrl = "http://localhost:8585";
     string getAgentsEndpoint = "/getRobotAgents";
     string getObstaclesEndpoint = "/getObstacles";
+    string getDroppedBoxesEndpoint = "/getDroppedBoxes";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
-    AgentData carsData, obstacleData;
+    List<AgentData> robotsData;
+    List<ObstacleData> obstacleData;
     GameObject[] agents;
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
     // Pause the simulation while we get the update from the server
     bool hold = false;
 
-    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor;
+    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab;
     public int NAgents, NBoxes, width, height, maxShelves;
     public float timeToUpdate = 5.0f, timer, dt;
 
     void Start()
     {
-        carsData = new AgentData();
-        obstacleData = new AgentData();
+        robotsData = new List<AgentData>();
+        obstacleData = new List<ObstacleData>();
         oldPositions = new List<Vector3>();
         newPositions = new List<Vector3>();
 
@@ -98,7 +106,7 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            StartCoroutine(GetCarsData());
+            StartCoroutine(GetRobotsData());
         }
     }
 
@@ -139,20 +147,18 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-
-            robotsHaveBoxes = new List<bool>
-            robotsData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+            List<bool> currentRobotHasBoxes = new List<bool>();
+            robotsData = JsonUtility.FromJson<List<AgentData>>(www.downloadHandler.text);
 
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
 
             newPositions.Clear();
             // REVISAR DESDE AQUI
-            foreach(Vector3 v in robotsData.positions)
-                newPositions.Add(v);
-
-            foreach(robotHasBox h in robotsData.robotsHaveBoxes)
-                robotsHaveBoxes.Add(h);
+            foreach(AgentData agent in robotsData) {
+                newPositions.Add(new Vector3(agent.x, agent.y, agent.z));
+                currentRobotHasBoxes.Add(agent.robotHasBox);
+            }   
 
             hold = false;
         }
@@ -167,13 +173,22 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            obstacleData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+            obstacleData = JsonUtility.FromJson<List<ObstacleData>>(www.downloadHandler.text);
             // Recieve tags from json and check for instantiation
-            Debug.Log(obstacleData.positions);
+            Debug.Log(obstacleData);
 
-            foreach(Vector3 position in obstacleData.positions)
+            foreach(ObstacleData obstacle in obstacleData)
             {
-                Instantiate(obstaclePrefab, position, Quaternion.identity);
+                if (obstacle.tag == "box") {
+                    Instantiate(boxPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
+                }
+                else if (obstacle.tag == "shelf") {
+                    Instantiate(shelfPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
+                }
+                else if (obstacle.tag == "border") {
+                    Instantiate(wallPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
+                }
+                
             }
         }
     }

@@ -27,6 +27,7 @@ class RobotAgent(Agent):
         """
         super().__init__(unique_id, model)
         self.has_box = False
+        self.tag = "robot"
 
     def move(self):
         """ 
@@ -36,13 +37,15 @@ class RobotAgent(Agent):
             self.pos,
             moore = False, # Boolean for whether to use Moore neighborhood (including diagonals) or Von Neumann (only up/down/left/right).
             include_center = False)
+        print("possible steps", possible_steps)
 
         box = None
         presentInCell = self.model.grid.get_cell_list_contents(possible_steps)
-        for cell in presentInCell:
+        print("presentInCell", presentInCell)
+        for agent in presentInCell:
 
-            if(cell[0].tag == "box"):
-                box = cell[0]
+            if(agent.tag == "box"):
+                box = agent
 
         if(self.has_box and self.model.drop_zone in possible_steps):
             # Dejar caja
@@ -67,9 +70,14 @@ class RobotAgent(Agent):
                     distance = distance_from_cell
                     index_min_distance = index
             if(index_min_distance):
-                cell_to_move = freeSpaces[index_min_distance]
+                cell_to_move = possible_steps[index_min_distance]
         else:
-            cell_to_move = self.model.random.choice(freeSpaces)
+            empty_positions = []
+            for i in range(0,len(possible_steps)):
+                if freeSpaces[i] == True:
+                    empty_positions.append(possible_steps[i])
+            
+            cell_to_move = self.model.random.choice(empty_positions)
 
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
         if cell_to_move:
@@ -123,7 +131,7 @@ class RobotModel(Model):
 
         # Add shelves to a random empty grid cell
         for i in range(self.shelves):
-            obj = ObstacleAgent(i, self, "shelve")
+            obj = ObstacleAgent(i, self, "shelf")
 
             pos_gen = lambda w, h: (self.random.randrange(w), self.random.randrange(h))
             pos = pos_gen(self.grid.width, self.grid.height)

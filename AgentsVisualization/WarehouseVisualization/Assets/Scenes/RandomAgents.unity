@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657838, g: 0.49641234, b: 0.57481676, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -328,13 +328,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 983bc179e80f15347a79dd7b044746e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 2773725627826193522, guid: f6193443ecef72e429e19d70c695b11e, type: 3}
-  obstaclePrefab: {fileID: 3271178945217671326, guid: 72077f90e2eb43a468b1d96afc5dd2d6, type: 3}
+  robotPrefab: {fileID: 2773725627826193522, guid: f6193443ecef72e429e19d70c695b11e, type: 3}
+  boxPrefab: {fileID: 7087528782812973772, guid: 37ba05114a026fb479882d52046b1947, type: 3}
+  shelfPrefab: {fileID: 4154845545479910432, guid: 2b1b216045a4f8443822e118cb1213a3, type: 3}
   floor: {fileID: 233219823969073703, guid: db2c6ecf0cc0b134c8e8bc98c403db39, type: 3}
+  wallPrefab: {fileID: 3271178945217671326, guid: 72077f90e2eb43a468b1d96afc5dd2d6, type: 3}
+  doorPrefab: {fileID: 7684483556424385743, guid: 8de934216147ea14398723299e8f16f2, type: 3}
   NAgents: 10
-  NBoxes: 0
+  NBoxes: 4
   width: 28
   height: 28
+  maxShelves: 8
   timeToUpdate: 0.5
   timer: 0
   dt: 0
