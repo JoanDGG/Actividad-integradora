@@ -18,13 +18,14 @@ public class CarData
 public class AgentData
 {
     public List<Vector3> positions;
+    public List<bool> robotsHaveBoxes;
 }
 
 public class AgentController : MonoBehaviour
 {
     // private string url = "https://boids.us-south.cf.appdomain.cloud/";
     string serverUrl = "http://localhost:8585";
-    string getAgentsEndpoint = "/getAgents";
+    string getAgentsEndpoint = "/getRobotAgents";
     string getObstaclesEndpoint = "/getObstacles";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
@@ -35,8 +36,8 @@ public class AgentController : MonoBehaviour
     // Pause the simulation while we get the update from the server
     bool hold = false;
 
-    public GameObject carPrefab, obstaclePrefab, floor;
-    public int NAgents, NBoxes, width, height;
+    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor;
+    public int NAgents, NBoxes, width, height, maxShelves;
     public float timeToUpdate = 5.0f, timer, dt;
 
     void Start()
@@ -54,7 +55,7 @@ public class AgentController : MonoBehaviour
         timer = timeToUpdate;
 
         for(int i = 0; i < NAgents; i++)
-            agents[i] = Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
+            agents[i] = Instantiate(robotPrefab, Vector3.zero, Quaternion.identity);
             
         StartCoroutine(SendConfiguration());
     }
@@ -109,6 +110,7 @@ public class AgentController : MonoBehaviour
         form.AddField("NBoxes", NBoxes.ToString());
         form.AddField("width", width.ToString());
         form.AddField("height", height.ToString());
+        form.AddField("maxShelves", maxShelves.ToString());
 
         UnityWebRequest www = UnityWebRequest.Post(serverUrl + sendConfigEndpoint, form);
         www.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -123,12 +125,12 @@ public class AgentController : MonoBehaviour
         {
             Debug.Log("Configuration upload complete!");
             Debug.Log("Getting Agents positions");
-            StartCoroutine(GetCarsData());
+            StartCoroutine(GetRobotsData());
             StartCoroutine(GetObstacleData());
         }
     }
 
-    IEnumerator GetCarsData() 
+    IEnumerator GetRobotsData() 
     {
         UnityWebRequest www = UnityWebRequest.Get(serverUrl + getAgentsEndpoint);
         yield return www.SendWebRequest();
@@ -137,15 +139,20 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            carsData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+
+            robotsHaveBoxes = new List<bool>
+            robotsData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
 
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
 
             newPositions.Clear();
-
-            foreach(Vector3 v in carsData.positions)
+            // REVISAR DESDE AQUI
+            foreach(Vector3 v in robotsData.positions)
                 newPositions.Add(v);
+
+            foreach(robotHasBox h in robotsData.robotsHaveBoxes)
+                robotsHaveBoxes.Add(h);
 
             hold = false;
         }

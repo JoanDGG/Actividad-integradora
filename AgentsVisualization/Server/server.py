@@ -6,6 +6,18 @@ from flask import Flask, request, jsonify
 from RobotAgents import *
 
 # Size of the board:
+
+"""
+number_agents = input("Number of agents: ")
+max_shelves = input("Maximum number of shelves: ") # If there's time make rows.
+number_boxes = input("Number of boxes: ")
+width = input("Width of the grid: ")
+height = input("Height of the grid: ")
+warehouse_model = None
+currentStep = 0
+"""
+
+
 number_agents = 10
 max_shelves = 5
 number_boxes = 10
@@ -14,7 +26,7 @@ height = 28
 warehouse_model = None
 currentStep = 0
 
-app = Flask("Traffic example")
+app = Flask("Warehouse example")
 
 # @app.route('/', methods=['POST', 'GET'])
 
@@ -27,6 +39,7 @@ def initModel():
         number_boxes = int(request.form.get('NBoxes'))
         width = int(request.form.get('width'))
         height = int(request.form.get('height'))
+        max_shelves = int(request.form.get('maxShelves'))
         currentStep = 0
 
         print(request.form)
@@ -36,15 +49,13 @@ def initModel():
 
         return jsonify({"message":"Parameters recieved, model initiated."})
 
-@app.route('/getAgents', methods=['GET'])
+@app.route('/getRobotAgents', methods=['GET'])
 def getAgents():
     global warehouse_model
 
     if request.method == 'GET':
-        robotPositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
-        # mandar numero de cajas droppeadas
-        # mandar has box de robots
-        return jsonify({'positions':robotPositions})
+        robots_attributes = [{"x": x, "y": 1, "z": z, "has_box": a.has_box} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
+        return jsonify({'robots_attributes': robots_attributes})
 
 @app.route('/getObstacles', methods=['GET'])
 def getObstacles():
@@ -54,6 +65,13 @@ def getObstacles():
         obstaclePositions = [{"x": x, "y":1, "z":z} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)]
         # Get tag(s) and add to jsonify
         return jsonify({'positions':obstaclePositions})
+
+@app.route('/getDroppedBoxes', methods=['GET'])
+def getAgents():
+    global warehouse_model
+
+    if request.method == 'GET':
+        return jsonify({'droppedBoxes': warehouse_model.boxes_dropped})
 
 @app.route('/update', methods=['GET'])
 def updateModel():
