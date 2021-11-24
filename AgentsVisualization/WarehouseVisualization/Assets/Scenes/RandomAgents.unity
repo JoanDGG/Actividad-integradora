@@ -433,7 +433,7 @@ MonoBehaviour:
   width: 28
   height: 28
   maxShelves: 8
-  timeToUpdate: 2
+  timeToUpdate: 0.5
   timer: 0
   dt: 0
 --- !u!4 &1518653506

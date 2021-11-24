@@ -76,6 +76,7 @@ class RobotAgent(Agent):
                 if(distance_from_cell < distance):
                     distance = distance_from_cell
                     index_min_distance = index
+            print("HAS BOX", index_min_distance)
             if(index_min_distance):
                 cell_to_move = possible_steps[index_min_distance]
         else:
@@ -84,6 +85,7 @@ class RobotAgent(Agent):
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
         if cell_to_move:
             print(f"Se mueve de {self.pos}", end = " ")
+            self.model.total_moves += 1
             self.model.grid.move_agent(self, cell_to_move)
             print(f"a {cell_to_move}")                
         else:
@@ -124,6 +126,8 @@ class RobotModel(Model):
         self.drop_zone = (self.random.randrange(1, self.grid.width - 1), 
                           self.random.randrange(1, self.grid.height -1))
         self.boxes_dropped = 0
+        self.cant_steps = 0
+        self.total_moves = 0
 
         # Creates the border of the grid
         border = [(x,y) for y in range(height) for x in range(width) if y in [0, height-1] or x in [0, width - 1]]
@@ -166,4 +170,9 @@ class RobotModel(Model):
 
     def step(self):
         '''Advance the model by one step.'''
-        self.schedule.step()
+        if(self.boxes_dropped < self.num_boxes):
+            self.schedule.step()
+            self.cant_steps += 1
+        else:
+            print(f"FINISHED\nTotal steps: {self.cant_steps}")
+            print(f"FINISHED\nTotal moves: {self.total_moves}")
