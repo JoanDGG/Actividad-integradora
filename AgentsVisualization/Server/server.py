@@ -44,7 +44,7 @@ def initModel():
 
         print(request.form)
         print(number_agents, max_shelves, number_boxes, width, height)
-        warehouse_model = RobotAgents.RobotModel(number_agents, max_shelves, number_boxes, width, height)
+        warehouse_model = RobotModel(number_agents, max_shelves, number_boxes, width, height)
         print("MODEL: ", warehouse_model)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
@@ -55,6 +55,7 @@ def getAgents():
 
     if request.method == 'GET':
         robots_attributes = [{"x": x, "y": 1, "z": z, "has_box": a.has_box} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
+        #print("Robot count: ", len(robots_attributes))
         return jsonify({'robots_attributes': robots_attributes})
 
 @app.route('/getObstacles', methods=['GET'])
@@ -62,9 +63,9 @@ def getObstacles():
     global warehouse_model
 
     if request.method == 'GET':
-        obstaclePositions = [{"x": x, "y":1, "z":z, "tag":a.tag}  for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)]
+        obstaclePositions = [{"x": x, "y":1, "z":z, "tag":a.tag, "picked_up": a.picked_up}  for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)]
         # Get tag(s) and add to jsonify
-        return jsonify({'positions':obstaclePositions})
+        return jsonify({'obstacles_attributes':obstaclePositions})
 
 @app.route('/getDroppedBoxes', methods=['GET'])
 def getDroppedBoxes():

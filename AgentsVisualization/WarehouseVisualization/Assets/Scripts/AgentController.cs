@@ -16,15 +16,30 @@ public class CarData
     public Vector3 position;
 }
 */
+[System.Serializable]
 public class ObstacleData
 {
     public float x, y, z;
     public string tag;
+    public bool picked_up;
 }
+[System.Serializable]
 public class AgentData
 {
     public float x, y, z;
-    public bool robotHasBox;
+    public bool has_box;
+}
+
+[System.Serializable]
+public class AgentsData
+{
+    public List<AgentData> robots_attributes;
+}
+
+[System.Serializable]
+public class ObstaclesData
+{
+    public List<ObstacleData> obstacles_attributes;
 }
 
 public class AgentController : MonoBehaviour
@@ -36,8 +51,8 @@ public class AgentController : MonoBehaviour
     string getDroppedBoxesEndpoint = "/getDroppedBoxes";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
-    List<AgentData> robotsData;
-    List<ObstacleData> obstacleData;
+    AgentsData robotsData;
+    ObstaclesData obstacleData;
     GameObject[] agents;
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
@@ -50,8 +65,8 @@ public class AgentController : MonoBehaviour
 
     void Start()
     {
-        robotsData = new List<AgentData>();
-        obstacleData = new List<ObstacleData>();
+        robotsData = new AgentsData();
+        obstacleData = new ObstaclesData();
         oldPositions = new List<Vector3>();
         newPositions = new List<Vector3>();
 
@@ -107,6 +122,7 @@ public class AgentController : MonoBehaviour
         else 
         {
             StartCoroutine(GetRobotsData());
+            StartCoroutine(UpdateObstaclesData());
         }
     }
 
@@ -131,8 +147,8 @@ public class AgentController : MonoBehaviour
         }
         else
         {
-            Debug.Log("Configuration upload complete!");
-            Debug.Log("Getting Agents positions");
+            //Debug.Log("Configuration upload complete!");
+            //Debug.Log("Getting Agents positions");
             StartCoroutine(GetRobotsData());
             StartCoroutine(GetObstacleData());
         }
@@ -147,18 +163,20 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            List<bool> currentRobotHasBoxes = new List<bool>();
-            robotsData = JsonUtility.FromJson<List<AgentData>>(www.downloadHandler.text);
-
+            robotsData = JsonUtility.FromJson<AgentsData>(www.downloadHandler.text);
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
 
             newPositions.Clear();
             // REVISAR DESDE AQUI
-            foreach(AgentData agent in robotsData) {
+            for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
+            {
+                AgentData agent = robotsData.robots_attributes[index_agent];
                 newPositions.Add(new Vector3(agent.x, agent.y, agent.z));
-                currentRobotHasBoxes.Add(agent.robotHasBox);
-            }   
+                agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
+            }
+            //print(newPositions.Count);
+            //print(currentRobotHasBoxes.Count);
 
             hold = false;
         }
@@ -173,12 +191,13 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            obstacleData = JsonUtility.FromJson<List<ObstacleData>>(www.downloadHandler.text);
+            obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
+            print("Count de obstacles: " + obstacleData.obstacles_attributes.Count);
             // Recieve tags from json and check for instantiation
-            Debug.Log(obstacleData);
-
-            foreach(ObstacleData obstacle in obstacleData)
+            
+            foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
             {
+                print("Tag: " + obstacle.tag);
                 if (obstacle.tag == "box") {
                     Instantiate(boxPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
@@ -188,7 +207,32 @@ public class AgentController : MonoBehaviour
                 else if (obstacle.tag == "border") {
                     Instantiate(wallPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
-                
+            }
+        }
+    }
+
+    IEnumerator UpdateObstaclesData()
+    {
+        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getObstaclesEndpoint);
+        yield return www.SendWebRequest();
+ 
+        if (www.result != UnityWebRequest.Result.Success)
+            Debug.Log(www.error);
+        else 
+        {
+            obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
+            // Recieve tags from json and check for instantiation
+            
+            foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
+            {
+                foreach(GameObject box in GameObject.FindGameObjectsWithTag("Box"))
+                {
+                    if (obstacle.picked_up && 
+                    obstacle.x == box.transform.position.x && 
+                    obstacle.z == box.transform.position.z) {
+                        Destroy(box);
+                    }
+                }
             }
         }
     }

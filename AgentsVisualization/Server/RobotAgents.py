@@ -10,6 +10,7 @@ Autor: Jorge Ramírez Uresti, Octavio Navarro
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import Grid
+import math
 
 class RobotAgent(Agent):
     """
@@ -54,29 +55,30 @@ class RobotAgent(Agent):
 
         elif(box and not self.has_box):
             #paso 2
-            self.model.remove_agent(box)
+            box.picked_up = True
+            self.model.grid.remove_agent(box)
             self.has_box = True
 
         # Checks which grid cells are empty
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
-
+        cell_to_move = None
+        empty_positions = []
+        for i in range(0,len(possible_steps)):
+            if freeSpaces[i] == True:
+                empty_positions.append(possible_steps[i])
+        
         if(self.has_box):
             #paso 3
             distance = 999999
             index_min_distance = None
-            for index, cell in enumerate(freeSpaces):
-                distance_from_cell = self.model.sqrt((cell.pos.x - self.model.drop_zone[0])**2+(cell.pos.y - self.model.drop_zone[1])**2)
+            for index, cell in enumerate(empty_positions):
+                distance_from_cell = math.sqrt((cell[0] - self.model.drop_zone[0])**2+(cell[1] - self.model.drop_zone[1])**2)
                 if(distance_from_cell < distance):
                     distance = distance_from_cell
                     index_min_distance = index
             if(index_min_distance):
                 cell_to_move = possible_steps[index_min_distance]
         else:
-            empty_positions = []
-            for i in range(0,len(possible_steps)):
-                if freeSpaces[i] == True:
-                    empty_positions.append(possible_steps[i])
-            
             cell_to_move = self.model.random.choice(empty_positions)
 
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
@@ -100,6 +102,7 @@ class ObstacleAgent(Agent):
     def __init__(self, unique_id, model, tag):
         super().__init__(unique_id, model)
         self.tag = tag
+        self.picked_up = False
 
     def step(self):
         pass   
