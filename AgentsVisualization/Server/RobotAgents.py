@@ -121,7 +121,8 @@ class RobotModel(Model):
         self.grid = Grid(width,height,torus = False) 
         self.schedule = RandomActivation(self)
         self.running = True
-        self.drop_zone = (self.random.randrange(self.grid.width), self.random.randrange(self.grid.height))
+        self.drop_zone = (self.random.randrange(1, self.grid.width - 1), 
+                          self.random.randrange(1, self.grid.height -1))
         self.boxes_dropped = 0
 
         # Creates the border of the grid

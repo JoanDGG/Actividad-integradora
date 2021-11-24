@@ -17,6 +17,12 @@ public class CarData
 }
 */
 [System.Serializable]
+public class Drop_zone
+{
+    public float x, y;
+}
+
+[System.Serializable]
 public class ObstacleData
 {
     public float x, y, z;
@@ -42,6 +48,12 @@ public class ObstaclesData
     public List<ObstacleData> obstacles_attributes;
 }
 
+[System.Serializable]
+public class Drop_zones
+{
+    public List<Drop_zone> drop_zone_pos;
+}
+
 public class AgentController : MonoBehaviour
 {
     // private string url = "https://boids.us-south.cf.appdomain.cloud/";
@@ -59,7 +71,7 @@ public class AgentController : MonoBehaviour
     // Pause the simulation while we get the update from the server
     bool hold = false;
 
-    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab;
+    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab, drop_zone;
     public int NAgents, NBoxes, width, height, maxShelves;
     public float timeToUpdate = 5.0f, timer, dt;
 
@@ -77,9 +89,6 @@ public class AgentController : MonoBehaviour
         
         timer = timeToUpdate;
 
-        for(int i = 0; i < NAgents; i++)
-            agents[i] = Instantiate(robotPrefab, Vector3.zero, Quaternion.identity);
-            
         StartCoroutine(SendConfiguration());
     }
 
@@ -121,7 +130,7 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            StartCoroutine(GetRobotsData());
+            StartCoroutine(UpdateRobotsData());
             StartCoroutine(UpdateObstaclesData());
         }
     }
@@ -152,6 +161,22 @@ public class AgentController : MonoBehaviour
             StartCoroutine(GetRobotsData());
             StartCoroutine(GetObstacleData());
         }
+
+        www = UnityWebRequest.Get(serverUrl + sendConfigEndpoint);
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
+        }
+        else
+        {
+            // Asignar posicion a drop zone
+            Debug.Log(www.downloadHandler.text);
+            Drop_zones drop_zones = JsonUtility.FromJson<Drop_zones>(www.downloadHandler.text);
+            Debug.Log(drop_zones.drop_zone_pos[0].x + ", " + drop_zones.drop_zone_pos[0].y);
+            drop_zone.transform.position = new Vector3(drop_zones.drop_zone_pos[0].x, 2f, drop_zones.drop_zone_pos[0].y);
+        }
     }
 
     IEnumerator GetRobotsData() 
@@ -165,15 +190,57 @@ public class AgentController : MonoBehaviour
         {
             robotsData = JsonUtility.FromJson<AgentsData>(www.downloadHandler.text);
             // Store the old positions for each agent
-            oldPositions = new List<Vector3>(newPositions);
-
-            newPositions.Clear();
             // REVISAR DESDE AQUI
             for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
             {
                 AgentData agent = robotsData.robots_attributes[index_agent];
+                Vector3 agentPosition = new Vector3(agent.x, agent.y, agent.z);
+                newPositions.Add(agentPosition);
+                agents[index_agent] = Instantiate(robotPrefab, agentPosition, Quaternion.identity);
+            }
+            //print(newPositions.Count);
+            //print(currentRobotHasBoxes.Count);
+
+            hold = false;
+        }
+    }
+
+    IEnumerator UpdateRobotsData() 
+    {
+        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getAgentsEndpoint);
+        yield return www.SendWebRequest();
+ 
+        if (www.result != UnityWebRequest.Result.Success)
+            Debug.Log(www.error);
+        else 
+        {
+            robotsData = JsonUtility.FromJson<AgentsData>(www.downloadHandler.text);
+            // Store the old positions for each agent
+            oldPositions = new List<Vector3>(newPositions);
+            newPositions.Clear();
+            foreach(AgentData agent in robotsData.robots_attributes)
+            {
                 newPositions.Add(new Vector3(agent.x, agent.y, agent.z));
+            }
+            // REVISAR DESDE AQUI
+            for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
+            {
+                AgentData agent = robotsData.robots_attributes[index_agent];
+                newPositions[index_agent] = new Vector3(agent.x, agent.y, agent.z);
                 agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
+                /*
+                foreach(GameObject a in GameObject.FindGameObjectsWithTag("Robot"))
+                {
+                    Debug.Log("Coordenadas de agent: " + agent.x + ", " + agent.z);
+                    Debug.Log("Coordenadas de a: " + a.transform.position.x + ", " + a.transform.position.z);
+                    if (agent.x == a.transform.position.x && 
+                    agent.z == a.transform.position.z) {
+                        newPositions[index_agent] = new Vector3(agent.x, agent.y, agent.z);
+                        //Debug.Log("aaaaaaaaaaaaaaaaaaa" + newPositions[index_agent]);
+                        agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
+                    }
+                }
+                */
             }
             //print(newPositions.Count);
             //print(currentRobotHasBoxes.Count);
@@ -197,7 +264,7 @@ public class AgentController : MonoBehaviour
             
             foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
             {
-                print("Tag: " + obstacle.tag);
+                //print("Tag: " + obstacle.tag);
                 if (obstacle.tag == "box") {
                     Instantiate(boxPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }

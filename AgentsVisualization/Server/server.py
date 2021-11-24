@@ -48,6 +48,8 @@ def initModel():
         print("MODEL: ", warehouse_model)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
+    elif request.method == 'GET':
+        return jsonify({'drop_zone_pos': [{"x": warehouse_model.drop_zone[0], "y": warehouse_model.drop_zone[1]}]})
 
 @app.route('/getRobotAgents', methods=['GET'])
 def getAgents():
