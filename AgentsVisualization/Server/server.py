@@ -42,10 +42,10 @@ def initModel():
         max_shelves = int(request.form.get('maxShelves'))
         currentStep = 0
 
-        print(request.form)
-        print(number_agents, max_shelves, number_boxes, width, height)
+        #print(request.form)
+        #print(number_agents, max_shelves, number_boxes, width, height)
         warehouse_model = RobotModel(number_agents, max_shelves, number_boxes, width, height)
-        print("MODEL: ", warehouse_model)
+        #print("MODEL: ", warehouse_model)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
     elif request.method == 'GET':
@@ -56,7 +56,17 @@ def getAgents():
     global warehouse_model
 
     if request.method == 'GET':
-        robots_attributes = sorted([{"x": x, "y": 1, "z": z, "has_box": a.has_box, "unique_id": a.unique_id} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)], key = lambda i: i["unique_id"])
+        robots_attributes = sorted([{"x": x, "y": 1, "z": z, "has_box": a.has_box, "unique_id": a.unique_id} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)], key=lambda item: item["unique_id"])
+        # Actually one agent disappears
+
+        print("The coordinates being checked and agents identified are: \n")
+
+        #for (agent, x, y) in warehouse_model.grid.coord_iter():
+        #    print(f"Position ({x}, {y}), agent {agent}\n")
+
+        print(f"The list with robot attributes has {len(robots_attributes)} entries")
+        for robot_attributes in robots_attributes:
+            print(robot_attributes)
         # coord_iter no regresa siempre el mismo orden.
         return jsonify({'robots_attributes': robots_attributes})
 
