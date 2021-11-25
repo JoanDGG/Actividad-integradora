@@ -56,8 +56,8 @@ def getAgents():
     global warehouse_model
 
     if request.method == 'GET':
-        robots_attributes = [{"x": x, "y": 1, "z": z, "has_box": a.has_box} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)]
-        #print("Robot count: ", len(robots_attributes))
+        robots_attributes = sorted([{"x": x, "y": 1, "z": z, "has_box": a.has_box, "unique_id": a.unique_id} for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, RobotAgent)], key = lambda i: i["unique_id"])
+        # coord_iter no regresa siempre el mismo orden.
         return jsonify({'robots_attributes': robots_attributes})
 
 @app.route('/getObstacles', methods=['GET'])

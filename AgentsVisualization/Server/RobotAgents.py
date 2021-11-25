@@ -43,6 +43,7 @@ class RobotAgent(Agent):
         box = None
         presentInCell = self.model.grid.get_cell_list_contents(possible_steps)
         print("presentInCell", presentInCell)
+        print("present in cell has ", len(presentInCell), "entries")
         for agent in presentInCell:
 
             if(agent.tag == "box"):
@@ -56,16 +57,24 @@ class RobotAgent(Agent):
         elif(box and not self.has_box):
             #paso 2
             box.picked_up = True
-            self.model.grid.remove_agent(box)
+            #self.model.grid.remove_agent(box) Now we don't remove because unity will hide.
             self.has_box = True
 
         # Checks which grid cells are empty
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
         cell_to_move = None
         empty_positions = []
-        for i in range(0,len(possible_steps)):
-            if freeSpaces[i] == True:
+        for i in range(0, len(possible_steps)):
+            """if (presentInCell[i].tag == "box"):
+                print("box is picked? ", presentInCell[i].picked_up)"""
+            list_with_agent_in_cell = self.model.grid.get_cell_list_contents([possible_steps[i]])
+
+            if freeSpaces[i] == True or possible_steps[i]:  # If theres an empty cell or a box cell thats picked up.
                 empty_positions.append(possible_steps[i])
+            elif list_with_agent_in_cell[0].tag == "box":
+                if list_with_agent_in_cell[0].picked_up == True:
+                    empty_positions.append(possible_steps[i])
+                
         
         if(self.has_box):
             #paso 3
@@ -73,12 +82,15 @@ class RobotAgent(Agent):
             index_min_distance = None
             for index, cell in enumerate(empty_positions):
                 distance_from_cell = math.sqrt((cell[0] - self.model.drop_zone[0])**2+(cell[1] - self.model.drop_zone[1])**2)
+                print("""analyzing distances: """)
                 if(distance_from_cell < distance):
                     distance = distance_from_cell
                     index_min_distance = index
-            print("HAS BOX", index_min_distance)
+
             if(index_min_distance):
                 cell_to_move = possible_steps[index_min_distance]
+                print("The empty position with the least distance to the drop zone is: {empty_positions[index_min_distance]}")
+
         else:
             cell_to_move = self.model.random.choice(empty_positions)
 
@@ -89,7 +101,7 @@ class RobotAgent(Agent):
             self.model.grid.move_agent(self, cell_to_move)
             print(f"a {cell_to_move}")                
         else:
-            print(f"No se puede mover de {self.pos} en esa direccion.")
+            print(f"El agente {self.unique_id} no se puede mover de {self.pos}. No hay celdas vacias")
 
     def step(self):
         """ 

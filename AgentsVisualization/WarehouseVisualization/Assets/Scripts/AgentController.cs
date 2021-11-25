@@ -34,6 +34,7 @@ public class AgentData
 {
     public float x, y, z;
     public bool has_box;
+    public int unique_id;
 }
 
 [System.Serializable]
@@ -68,6 +69,7 @@ public class AgentController : MonoBehaviour
     GameObject[] agents;
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
+    List<int> unique_ids;
     // Pause the simulation while we get the update from the server
     bool hold = false;
 
@@ -81,6 +83,7 @@ public class AgentController : MonoBehaviour
         obstacleData = new ObstaclesData();
         oldPositions = new List<Vector3>();
         newPositions = new List<Vector3>();
+        //unique_ids = new List<int>();
 
         agents = new GameObject[NAgents];
 
@@ -197,6 +200,7 @@ public class AgentController : MonoBehaviour
                 Vector3 agentPosition = new Vector3(agent.x, agent.y, agent.z);
                 newPositions.Add(agentPosition);
                 agents[index_agent] = Instantiate(robotPrefab, agentPosition, Quaternion.identity);
+                //unique_ids.Add(agent.unique_id);
             }
             //print(newPositions.Count);
             //print(currentRobotHasBoxes.Count);
@@ -218,17 +222,21 @@ public class AgentController : MonoBehaviour
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
             newPositions.Clear();
-            foreach(AgentData agent in robotsData.robots_attributes)
-            {
-                newPositions.Add(new Vector3(agent.x, agent.y, agent.z));
+
+
+            for(int i = 0; i < robotsData.robots_attributes.Count; i++) {
+                AgentData agentData = robotsData.robots_attributes[i];
+                newPositions.Add(new Vector3(agentData.x, agentData.y, agentData.z));
+                agents[i].transform.GetChild(1).gameObject.SetActive(agentData.has_box);
             }
-            // REVISAR DESDE AQUI
+
+            /*
             for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
             {
                 AgentData agent = robotsData.robots_attributes[index_agent];
                 newPositions[index_agent] = new Vector3(agent.x, agent.y, agent.z);
                 agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
-                /*
+                
                 foreach(GameObject a in GameObject.FindGameObjectsWithTag("Robot"))
                 {
                     Debug.Log("Coordenadas de agent: " + agent.x + ", " + agent.z);
@@ -240,8 +248,8 @@ public class AgentController : MonoBehaviour
                         agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
                     }
                 }
-                */
-            }
+                
+            }*/
             //print(newPositions.Count);
             //print(currentRobotHasBoxes.Count);
 
@@ -294,6 +302,8 @@ public class AgentController : MonoBehaviour
             {
                 foreach(GameObject box in GameObject.FindGameObjectsWithTag("Box"))
                 {
+                    //Debug.Log("python obstacle position " + obstacle.x + obstacle.y + obstacle.z);
+                    //Debug.Log("Unity obstacle position " + box.transform.position.x + box.transform.position.y + box.transform.position.z);
                     if (obstacle.picked_up && 
                     obstacle.x == box.transform.position.x && 
                     obstacle.z == box.transform.position.z) {
