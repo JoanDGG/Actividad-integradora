@@ -28,6 +28,7 @@ public class ObstacleData
     public float x, y, z;
     public string tag;
     public bool picked_up;
+    public int unique_id;
 }
 [System.Serializable]
 public class AgentData
@@ -295,22 +296,30 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
+
+
             obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
             // Recieve tags from json and check for instantiation
             
-            foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
-            {
-                foreach(GameObject box in GameObject.FindGameObjectsWithTag("Box"))
+            bool boxGOSurvives;
+
+            foreach(GameObject boxGameObject in GameObject.FindGameObjectsWithTag("Box")) {
+                boxGOSurvives = false;
+                foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
                 {
-                    //Debug.Log("python obstacle position " + obstacle.x + obstacle.y + obstacle.z);
-                    //Debug.Log("Unity obstacle position " + box.transform.position.x + box.transform.position.y + box.transform.position.z);
-                    if (obstacle.picked_up && 
-                    obstacle.x == box.transform.position.x && 
-                    obstacle.z == box.transform.position.z) {
-                        Destroy(box);
-                    }
-                }
+                    if (obstacle.tag == "box" && 
+                        boxGameObject.transform.position.x == obstacle.x && 
+                        boxGameObject.transform.position.z == obstacle.z) {
+                            boxGOSurvives = true;
+                        }
+                }  
+
+                if (!boxGOSurvives) {
+                    Destroy(boxGameObject);
+                }     
+
             }
+
         }
     }
 }

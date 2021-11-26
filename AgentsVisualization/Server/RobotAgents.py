@@ -62,19 +62,18 @@ class RobotAgent(Agent):
         elif(box and not self.has_box):
             #paso 2
             box.picked_up = True
-            #self.model.grid.remove_agent(box) Now we don't remove because unity will hide.
+            self.model.grid.remove_agent(box)
             self.has_box = True
             return
 
-        # Checks which grid cells are empty
+        
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
+        print(f"I agent {self.unique_id} have neighborhood {possible_steps}")
+        print(f"The ones that are empty are: {freeSpaces}")
         cell_to_move = None
         empty_positions = []
         for i in range(0, len(possible_steps)):
-            """if (presentInCell[i].tag == "box"):
-                print("box is picked? ", presentInCell[i].picked_up)"""
             list_with_agent_in_cell = self.model.grid.get_cell_list_contents([possible_steps[i]])
-
             if freeSpaces[i] == True:  # If theres an empty cell or a box cell thats picked up.
                 empty_positions.append(possible_steps[i])
             elif list_with_agent_in_cell[0].tag == "box":
@@ -87,16 +86,17 @@ class RobotAgent(Agent):
             print(f"I, agent {self.unique_id} have box but cant drop it yet, finding best route\n")
             print(f"My possible steps: are {empty_positions}")
 
-            distance = 999999
+            distance = math.inf
             index_min_distance = None
             for index, cell in enumerate(empty_positions):
                 distance_from_cell = math.sqrt((cell[0] - self.model.drop_zone[0])**2+(cell[1] - self.model.drop_zone[1])**2)
                 print(f"The distance from cell {cell} to drop zone {self.model.drop_zone} is {distance_from_cell}")
+                print(f"The min distance so far is {distance}, its index in the empty positions is {index_min_distance}")
                 if(distance_from_cell < distance):
                     distance = distance_from_cell
                     index_min_distance = index
 
-            if(index_min_distance):
+            if(isinstance(index_min_distance, int)):
                 cell_to_move = empty_positions[index_min_distance]
                 print(f"I will move to cell {cell_to_move}")
 
@@ -111,17 +111,21 @@ class RobotAgent(Agent):
             print(f"El agente {self.unique_id} mueve de {self.pos}", end = " ")
             self.model.total_moves += 1
 
-            robot_copy = self
             #self.model.grid.remove_agent(self)
 
             # AAAAAAAAAAAA AQUI ESTA LA SALSA.
-            #self.model.grid.move_agent(cell_to_move, self)
+            # The agents were trying to move into positions of boxes that we couldnt see they were picked up single grid crashed.
+            self.model.grid.move_agent(self, cell_to_move)
 
-            pos = self.model.grid.torus_adj(cell_to_move)
-            self.model.grid._remove_agent(self.pos, self)
-            self.model.grid._place_agent(pos, self)
-            self.pos = pos
-            
+            """
+            list_with_agent_in_cell_to_move = self.model.grid.get_cell_list_contents(cell_to_move)
+
+            if self.model.grid.is_cell_empty(cell_to_move):    
+                self.model.grid.move_agent(self, cell_to_move)
+            elif list_with_agent_in_cell_to_move[0].tag == "box":
+                if list_with_agent_in_cell_to_move[0].picked_up == True:
+                    self.model.grid.move_agent(self, cell_to_move)
+            """
             print(f"a {cell_to_move}")                
         else:
             print(f"El agente {self.unique_id} no se puede mover de {self.pos}. No hay celdas vacias")
@@ -163,8 +167,8 @@ class RobotModel(Model):
         border = [(x,y) for y in range(height) for x in range(width) if y in [0, height-1] or x in [0, width - 1]]
 
         # Add the barriers at the border of existing grid, not outside of it.
-        for pos in border:
-            obs = ObstacleAgent(pos, self, "border")
+        for ind, pos in enumerate(border):
+            obs = ObstacleAgent(ind, self, "border")
             self.grid.place_agent(obs, pos)
 
         # Add shelves to a random empty grid cell

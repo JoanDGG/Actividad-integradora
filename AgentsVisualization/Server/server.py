@@ -23,7 +23,6 @@ max_shelves = 5
 number_boxes = 10
 width = 28
 height = 28
-warehouse_model = None
 currentStep = 0
 
 app = Flask("Warehouse example")
@@ -75,7 +74,7 @@ def getObstacles():
     global warehouse_model
 
     if request.method == 'GET':
-        obstaclePositions = [{"x": x, "y":1, "z":z, "tag":a.tag, "picked_up": a.picked_up}  for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)]
+        obstaclePositions = sorted([{"x": x, "y":1, "z":z, "tag":a.tag, "picked_up": a.picked_up, "unique_id": a.unique_id}  for (a, x, z) in warehouse_model.grid.coord_iter() if isinstance(a, ObstacleAgent)], key=lambda item: item["unique_id"])
         # Get tag(s) and add to jsonify
         return jsonify({'obstacles_attributes':obstaclePositions})
 
