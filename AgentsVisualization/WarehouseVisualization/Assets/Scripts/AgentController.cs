@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 
 /*
@@ -56,6 +57,18 @@ public class Drop_zones
     public List<Drop_zone> drop_zone_pos;
 }
 
+[System.Serializable]
+public class ModelData
+{
+    public int currentStep;
+    public int droppedBoxes;
+}
+[System.Serializable]
+public class DroppedBoxes
+{
+    public int droppedBoxes;
+}
+
 public class AgentController : MonoBehaviour
 {
     // private string url = "https://boids.us-south.cf.appdomain.cloud/";
@@ -70,12 +83,13 @@ public class AgentController : MonoBehaviour
     GameObject[] agents;
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
-    List<int> unique_ids;
+    // List<int> unique_ids;
     // Pause the simulation while we get the update from the server
     bool hold = false;
 
     public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab, drop_zone;
-    public int NAgents, NBoxes, width, height, maxShelves;
+    public Text currentStep;
+    public int NAgents, NBoxes, width, height, maxShelves, maxSteps;
     public float timeToUpdate = 5.0f, timer, dt;
 
     void Start()
@@ -117,7 +131,8 @@ public class AgentController : MonoBehaviour
                 agents[s].transform.localPosition = interpolated;
                 
                 Vector3 dir = oldPositions[s] - newPositions[s];
-                agents[s].transform.rotation = Quaternion.LookRotation(dir);
+                if(dir != new Vector3(0, 0, 0))
+                    agents[s].transform.rotation = Quaternion.LookRotation(dir);
                 
             }
             // Move time from the last frame
@@ -134,9 +149,36 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            StartCoroutine(UpdateRobotsData());
-            StartCoroutine(UpdateObstaclesData());
+            ModelData model = JsonUtility.FromJson<ModelData>(www.downloadHandler.text);
+            currentStep.text = "Boxes: " + model.droppedBoxes + "/" + NBoxes + "\n" +
+                               "Step " + model.currentStep;
+            if(model.currentStep >= maxSteps || model.droppedBoxes >= NBoxes)
+            {
+                // Time.timeScale = 0;
+                currentStep.text += "\nSimulation complete.";
+            }
+            else
+            {
+                StartCoroutine(UpdateRobotsData());
+                StartCoroutine(UpdateObstaclesData());
+            }
         }
+
+        /*
+        www = UnityWebRequest.Get(serverUrl + getDroppedBoxesEndpoint);
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
+        }
+        else
+        {
+            // Obtener las cajas apiladas
+            DroppedBoxes boxes_data = JsonUtility.FromJson<DroppedBoxes>(www.downloadHandler.text);
+            Debug.Log(boxes_data.droppedBoxes);
+        }
+        */
     }
 
     IEnumerator SendConfiguration()
@@ -148,6 +190,7 @@ public class AgentController : MonoBehaviour
         form.AddField("width", width.ToString());
         form.AddField("height", height.ToString());
         form.AddField("maxShelves", maxShelves.ToString());
+        form.AddField("maxSteps", maxSteps.ToString());
 
         UnityWebRequest www = UnityWebRequest.Post(serverUrl + sendConfigEndpoint, form);
         www.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -176,9 +219,8 @@ public class AgentController : MonoBehaviour
         else
         {
             // Asignar posicion a drop zone
-            Debug.Log(www.downloadHandler.text);
             Drop_zones drop_zones = JsonUtility.FromJson<Drop_zones>(www.downloadHandler.text);
-            Debug.Log(drop_zones.drop_zone_pos[0].x + ", " + drop_zones.drop_zone_pos[0].y);
+            //Debug.Log(drop_zones.drop_zone_pos[0].x + ", " + drop_zones.drop_zone_pos[0].y);
             drop_zone.transform.position = new Vector3(drop_zones.drop_zone_pos[0].x, 2f, drop_zones.drop_zone_pos[0].y);
         }
     }
@@ -224,33 +266,11 @@ public class AgentController : MonoBehaviour
             oldPositions = new List<Vector3>(newPositions);
             newPositions.Clear();
 
-
             for(int i = 0; i < robotsData.robots_attributes.Count; i++) {
                 AgentData agentData = robotsData.robots_attributes[i];
                 newPositions.Add(new Vector3(agentData.x, agentData.y, agentData.z));
                 agents[i].transform.GetChild(1).gameObject.SetActive(agentData.has_box);
             }
-
-            /*
-            for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
-            {
-                AgentData agent = robotsData.robots_attributes[index_agent];
-                newPositions[index_agent] = new Vector3(agent.x, agent.y, agent.z);
-                agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
-                
-                foreach(GameObject a in GameObject.FindGameObjectsWithTag("Robot"))
-                {
-                    Debug.Log("Coordenadas de agent: " + agent.x + ", " + agent.z);
-                    Debug.Log("Coordenadas de a: " + a.transform.position.x + ", " + a.transform.position.z);
-                    if (agent.x == a.transform.position.x && 
-                    agent.z == a.transform.position.z) {
-                        newPositions[index_agent] = new Vector3(agent.x, agent.y, agent.z);
-                        //Debug.Log("aaaaaaaaaaaaaaaaaaa" + newPositions[index_agent]);
-                        agents[index_agent].transform.GetChild(1).gameObject.SetActive(agent.has_box);
-                    }
-                }
-                
-            }*/
             //print(newPositions.Count);
             //print(currentRobotHasBoxes.Count);
 
@@ -268,7 +288,7 @@ public class AgentController : MonoBehaviour
         else 
         {
             obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
-            print("Count de obstacles: " + obstacleData.obstacles_attributes.Count);
+            // print("Count de obstacles: " + obstacleData.obstacles_attributes.Count);
             // Recieve tags from json and check for instantiation
             
             foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
@@ -278,6 +298,7 @@ public class AgentController : MonoBehaviour
                     Instantiate(boxPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
                 else if (obstacle.tag == "shelf") {
+                    print("Shelf");
                     Instantiate(shelfPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
                 else if (obstacle.tag == "border") {
@@ -296,8 +317,6 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-
-
             obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
             // Recieve tags from json and check for instantiation
             
@@ -309,17 +328,16 @@ public class AgentController : MonoBehaviour
                 {
                     if (obstacle.tag == "box" && 
                         boxGameObject.transform.position.x == obstacle.x && 
-                        boxGameObject.transform.position.z == obstacle.z) {
-                            boxGOSurvives = true;
-                        }
+                        boxGameObject.transform.position.z == obstacle.z) 
+                    {
+                        boxGOSurvives = true;
+                    }
                 }  
 
                 if (!boxGOSurvives) {
                     Destroy(boxGameObject);
                 }     
-
             }
-
         }
     }
 }

@@ -17,13 +17,13 @@ warehouse_model = None
 currentStep = 0
 """
 
-
 number_agents = 10
 max_shelves = 5
 number_boxes = 10
 width = 28
 height = 28
 currentStep = 0
+max_steps = 100
 
 app = Flask("Warehouse example")
 
@@ -31,7 +31,7 @@ app = Flask("Warehouse example")
 
 @app.route('/init', methods=['POST', 'GET'])
 def initModel():
-    global currentStep, warehouse_model, number_agents, max_shelves, number_boxes, width, height
+    global currentStep, warehouse_model, number_agents, max_shelves, number_boxes, width, height, max_steps
 
     if request.method == 'POST':
         number_agents = int(request.form.get('NAgents'))
@@ -39,11 +39,12 @@ def initModel():
         width = int(request.form.get('width'))
         height = int(request.form.get('height'))
         max_shelves = int(request.form.get('maxShelves'))
+        max_steps = int(request.form.get('maxSteps'))
         currentStep = 0
 
         #print(request.form)
-        #print(number_agents, max_shelves, number_boxes, width, height)
-        warehouse_model = RobotModel(number_agents, max_shelves, number_boxes, width, height)
+        #print(number_agents, max_shelves, number_boxes, width, height, max_steps)
+        warehouse_model = RobotModel(number_agents, max_shelves, number_boxes, width, height, max_steps)
         #print("MODEL: ", warehouse_model)
 
         return jsonify({"message":"Parameters recieved, model initiated."})
@@ -91,7 +92,7 @@ def updateModel():
     if request.method == 'GET':
         warehouse_model.step()
         currentStep += 1
-        return jsonify({'message':f'Model updated to step {currentStep}.', 'currentStep':currentStep})
+        return jsonify({'currentStep':currentStep, 'droppedBoxes': warehouse_model.boxes_dropped})
 
 if __name__=='__main__':
     app.run(host="localhost", port=8585, debug=True)

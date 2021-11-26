@@ -150,7 +150,7 @@ class RobotModel(Model):
         N: Number of agents in the simulation
         height, width: The size of the grid to model
     """
-    def __init__(self, N, max_shelves, N_boxes, width, height):
+    def __init__(self, N, max_shelves, N_boxes, width, height, max_moves):
         self.num_agents = max([5,N])
         self.shelves = self.random.randrange(max_shelves)
         self.num_boxes = N_boxes
@@ -162,6 +162,7 @@ class RobotModel(Model):
         self.boxes_dropped = 0
         self.cant_steps = 0
         self.total_moves = 0
+        self.max_moves = max_moves
 
         # Creates the border of the grid
         border = [(x,y) for y in range(height) for x in range(width) if y in [0, height-1] or x in [0, width - 1]]
@@ -204,7 +205,7 @@ class RobotModel(Model):
 
     def step(self):
         '''Advance the model by one step.'''
-        if(self.boxes_dropped < self.num_boxes):
+        if(self.boxes_dropped < self.num_boxes and self.max_moves > self.cant_steps):
             self.schedule.step()
             self.cant_steps += 1
         else:
