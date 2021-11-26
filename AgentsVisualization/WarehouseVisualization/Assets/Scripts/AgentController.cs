@@ -2,21 +2,12 @@
 // C# client to interact with Python. Based on the code provided by Sergio Ruiz.
 // Octavio Navarro. October 2021
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 
-/*
-public class CarData
-{
-    public int uniqueID;
-    public Vector3 position;
-}
-*/
 [System.Serializable]
 public class Drop_zone
 {
@@ -75,7 +66,6 @@ public class AgentController : MonoBehaviour
     string serverUrl = "http://localhost:8585";
     string getAgentsEndpoint = "/getRobotAgents";
     string getObstaclesEndpoint = "/getObstacles";
-    string getDroppedBoxesEndpoint = "/getDroppedBoxes";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
     AgentsData robotsData;
@@ -84,7 +74,6 @@ public class AgentController : MonoBehaviour
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
     // List<int> unique_ids;
-    // Pause the simulation while we get the update from the server
     bool hold = false;
 
     public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab, drop_zone;
@@ -150,11 +139,10 @@ public class AgentController : MonoBehaviour
         else 
         {
             ModelData model = JsonUtility.FromJson<ModelData>(www.downloadHandler.text);
-            currentStep.text = "Boxes: " + model.droppedBoxes + "/" + NBoxes + "\n" +
+            currentStep.text = "Boxes found: " + model.droppedBoxes + "/" + NBoxes + "\n" +
                                "Step " + model.currentStep;
             if(model.currentStep >= maxSteps || model.droppedBoxes >= NBoxes)
             {
-                // Time.timeScale = 0;
                 currentStep.text += "\nSimulation complete.";
             }
             else
@@ -163,22 +151,6 @@ public class AgentController : MonoBehaviour
                 StartCoroutine(UpdateObstaclesData());
             }
         }
-
-        /*
-        www = UnityWebRequest.Get(serverUrl + getDroppedBoxesEndpoint);
-        yield return www.SendWebRequest();
-
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.Log(www.error);
-        }
-        else
-        {
-            // Obtener las cajas apiladas
-            DroppedBoxes boxes_data = JsonUtility.FromJson<DroppedBoxes>(www.downloadHandler.text);
-            Debug.Log(boxes_data.droppedBoxes);
-        }
-        */
     }
 
     IEnumerator SendConfiguration()
@@ -204,7 +176,6 @@ public class AgentController : MonoBehaviour
         else
         {
             //Debug.Log("Configuration upload complete!");
-            //Debug.Log("Getting Agents positions");
             StartCoroutine(GetRobotsData());
             StartCoroutine(GetObstacleData());
         }
@@ -218,10 +189,11 @@ public class AgentController : MonoBehaviour
         }
         else
         {
-            // Asignar posicion a drop zone
+            // Assign position to the drop zone
             Drop_zones drop_zones = JsonUtility.FromJson<Drop_zones>(www.downloadHandler.text);
-            //Debug.Log(drop_zones.drop_zone_pos[0].x + ", " + drop_zones.drop_zone_pos[0].y);
-            drop_zone.transform.position = new Vector3(drop_zones.drop_zone_pos[0].x, 2f, drop_zones.drop_zone_pos[0].y);
+            drop_zone.transform.position = new Vector3(drop_zones.drop_zone_pos[0].x,
+                                                       drop_zone.transform.position.y, 
+                                                       drop_zones.drop_zone_pos[0].y);
         }
     }
 
@@ -236,7 +208,6 @@ public class AgentController : MonoBehaviour
         {
             robotsData = JsonUtility.FromJson<AgentsData>(www.downloadHandler.text);
             // Store the old positions for each agent
-            // REVISAR DESDE AQUI
             for (int index_agent = 0; index_agent < robotsData.robots_attributes.Count; index_agent++)
             {
                 AgentData agent = robotsData.robots_attributes[index_agent];
@@ -245,8 +216,6 @@ public class AgentController : MonoBehaviour
                 agents[index_agent] = Instantiate(robotPrefab, agentPosition, Quaternion.identity);
                 //unique_ids.Add(agent.unique_id);
             }
-            //print(newPositions.Count);
-            //print(currentRobotHasBoxes.Count);
 
             hold = false;
         }
@@ -271,8 +240,6 @@ public class AgentController : MonoBehaviour
                 newPositions.Add(new Vector3(agentData.x, agentData.y, agentData.z));
                 agents[i].transform.GetChild(1).gameObject.SetActive(agentData.has_box);
             }
-            //print(newPositions.Count);
-            //print(currentRobotHasBoxes.Count);
 
             hold = false;
         }
@@ -288,17 +255,13 @@ public class AgentController : MonoBehaviour
         else 
         {
             obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
-            // print("Count de obstacles: " + obstacleData.obstacles_attributes.Count);
             // Recieve tags from json and check for instantiation
-            
             foreach(ObstacleData obstacle in obstacleData.obstacles_attributes)
             {
-                //print("Tag: " + obstacle.tag);
                 if (obstacle.tag == "box") {
                     Instantiate(boxPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
                 else if (obstacle.tag == "shelf") {
-                    print("Shelf");
                     Instantiate(shelfPrefab, new Vector3(obstacle.x, obstacle.y, obstacle.z), Quaternion.identity);
                 }
                 else if (obstacle.tag == "border") {
@@ -319,7 +282,6 @@ public class AgentController : MonoBehaviour
         {
             obstacleData = JsonUtility.FromJson<ObstaclesData>(www.downloadHandler.text);
             // Recieve tags from json and check for instantiation
-            
             bool boxGOSurvives;
 
             foreach(GameObject boxGameObject in GameObject.FindGameObjectsWithTag("Box")) {
@@ -333,7 +295,6 @@ public class AgentController : MonoBehaviour
                         boxGOSurvives = true;
                     }
                 }  
-
                 if (!boxGOSurvives) {
                     Destroy(boxGameObject);
                 }     

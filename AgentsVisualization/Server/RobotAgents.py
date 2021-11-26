@@ -3,12 +3,15 @@
 Modelos de Agente y del medio ambiente
 Movimiento aleatorio del auto en el grid
 
-Solución al reto de TC2008B semestre AgostoDiciembre 2021
-Autor: Jorge Ramírez Uresti, Octavio Navarro
+Model of the Agent and the enviornment.
+Random movement & path to return home from the robot agent on the grid.
+
+Solution to the situational problem TC2008B August-December 2021
+Autors: Jorge Ramírez Uresti, Octavio Navarro, Luis Ignacio Ferro Salinas, Joan Daniel Guerrero García, Daniel García Barajas
 """
 
 from mesa import Agent, Model
-from mesa.time import BaseScheduler, RandomActivation
+from mesa.time import BaseScheduler
 from mesa.space import SingleGrid
 import math
 
@@ -30,46 +33,35 @@ class RobotAgent(Agent):
         self.has_box = False
         self.tag = "robot"
 
-    def move(self):
-        pass
     def step(self):
         """ 
         Determines if the agent can move in the direction that was chosen
         """
-        print(f"I, agent {self.unique_id} am in position ({self.pos[0]}, {self.pos[1]}) at the beginning of the step.")
-
         possible_steps = self.model.grid.get_neighborhood(
             self.pos,
             moore = False, # Boolean for whether to use Moore neighborhood (including diagonals) or Von Neumann (only up/down/left/right).
             include_center = False)
-        #print("possible steps", possible_steps)
 
         box = None
         presentInCell = self.model.grid.get_cell_list_contents(possible_steps)
-        #print("presentInCell", presentInCell)
-        #print("present in cell has ", len(presentInCell), "entries")
         for agent in presentInCell:
             if(agent.tag == "box"):
                 box = agent
 
         if(self.has_box and self.model.drop_zone in possible_steps):
-            # Dejar caja
-            print(f"I, agent {self.unique_id} can drop the box, I am doing it\n")
+            # Leave box
             self.model.boxes_dropped += 1
             self.has_box = False
             return
 
         elif(box and not self.has_box):
-            #paso 2
+            # Pick up box
             box.picked_up = True
             self.model.grid.remove_agent(box)
             self.has_box = True
             return
 
-        
         freeSpaces = list(map(self.model.grid.is_cell_empty, possible_steps))
-        print(f"I agent {self.unique_id} have neighborhood {possible_steps}")
-        print(f"The ones that are empty are: {freeSpaces}")
         cell_to_move = None
         empty_positions = []
         for i in range(0, len(possible_steps)):
@@ -79,54 +71,30 @@ class RobotAgent(Agent):
             elif list_with_agent_in_cell[0].tag == "box":
                 if list_with_agent_in_cell[0].picked_up == True:
                     empty_positions.append(possible_steps[i])
-                
         
         if(self.has_box):
-            #paso 3
-            print(f"I, agent {self.unique_id} have box but cant drop it yet, finding best route\n")
-            print(f"My possible steps: are {empty_positions}")
-
+            # Return to drop zone
             distance = math.inf
             index_min_distance = None
             for index, cell in enumerate(empty_positions):
                 distance_from_cell = math.sqrt((cell[0] - self.model.drop_zone[0])**2+(cell[1] - self.model.drop_zone[1])**2)
-                print(f"The distance from cell {cell} to drop zone {self.model.drop_zone} is {distance_from_cell}")
-                print(f"The min distance so far is {distance}, its index in the empty positions is {index_min_distance}")
                 if(distance_from_cell < distance):
                     distance = distance_from_cell
                     index_min_distance = index
 
             if(isinstance(index_min_distance, int)):
                 cell_to_move = empty_positions[index_min_distance]
-                print(f"I will move to cell {cell_to_move}")
-
-                #print("The empty position with the least distance to the drop zone is: {empty_positions[index_min_distance]}")
 
         else:
             cell_to_move = self.model.random.choice(empty_positions)
-            print(f"I, agent {self.unique_id} chose to move to random empty {cell_to_move}")
 
         # If the cell is empty, moves the agent to that cell; otherwise, it stays at the same position
         if cell_to_move:
-            print(f"El agente {self.unique_id} mueve de {self.pos}", end = " ")
+            print(f"El agente {self.unique_id} se mueve de {self.pos}", end = " ")
             self.model.total_moves += 1
-
-            #self.model.grid.remove_agent(self)
-
-            # AAAAAAAAAAAA AQUI ESTA LA SALSA.
             # The agents were trying to move into positions of boxes that we couldnt see they were picked up single grid crashed.
             self.model.grid.move_agent(self, cell_to_move)
-
-            """
-            list_with_agent_in_cell_to_move = self.model.grid.get_cell_list_contents(cell_to_move)
-
-            if self.model.grid.is_cell_empty(cell_to_move):    
-                self.model.grid.move_agent(self, cell_to_move)
-            elif list_with_agent_in_cell_to_move[0].tag == "box":
-                if list_with_agent_in_cell_to_move[0].picked_up == True:
-                    self.model.grid.move_agent(self, cell_to_move)
-            """
-            print(f"a {cell_to_move}")                
+            print(f"a {cell_to_move}")
         else:
             print(f"El agente {self.unique_id} no se puede mover de {self.pos}. No hay celdas vacias")
 
@@ -175,7 +143,6 @@ class RobotModel(Model):
         # Add shelves to a random empty grid cell
         for i in range(self.shelves):
             obj = ObstacleAgent(i, self, "shelf")
-
             pos_gen = lambda w, h: (self.random.randrange(1, w - 1), self.random.randrange(1, h - 1))
             pos = pos_gen(self.grid.width, self.grid.height)
             while (not self.grid.is_cell_empty(pos)):
@@ -185,7 +152,6 @@ class RobotModel(Model):
         # Add boxes to a random empty grid cell
         for i in range(self.num_boxes):
             obj = ObstacleAgent(i, self, "box")
-
             pos_gen = lambda w, h: (self.random.randrange(1, w - 1), self.random.randrange(1, h - 1))
             pos = pos_gen(self.grid.width, self.grid.height)
             while (not self.grid.is_cell_empty(pos)):
@@ -196,7 +162,6 @@ class RobotModel(Model):
         for i in range(self.num_agents):
             a = RobotAgent(i+1000, self) 
             self.schedule.add(a)
-
             pos_gen = lambda w, h: (self.random.randrange(1, w - 1), self.random.randrange(1, h - 1))
             pos = pos_gen(self.grid.width, self.grid.height)
             while (not self.grid.is_cell_empty(pos)):
