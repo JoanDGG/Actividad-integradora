@@ -7,6 +7,7 @@ public class ReloadScene : MonoBehaviour
 {
     public void LoadScene()
     {
-        SceneManager.LoadScene("RandomAgents");
+        GameObject.Find("AgentController").GetComponent<AgentController>().InitialConfiguration();
+        // SceneManager.LoadScene("RandomAgents");
     }
 }

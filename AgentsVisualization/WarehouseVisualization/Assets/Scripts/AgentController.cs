@@ -76,7 +76,7 @@ public class AgentController : MonoBehaviour
     // List<int> unique_ids;
     bool hold = false;
 
-    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab, drop_zone;
+    public GameObject robotPrefab, boxPrefab, shelfPrefab, floor, wallPrefab, doorPrefab, drop_zone, reloadButton;
     public Text currentStep;
     public int NAgents, NBoxes, width, height, maxShelves, maxSteps;
     public float timeToUpdate = 5.0f, timer, dt;
@@ -96,7 +96,7 @@ public class AgentController : MonoBehaviour
         
         timer = timeToUpdate;
 
-        StartCoroutine(SendConfiguration());
+        InitialConfiguration();
     }
 
     private void Update() 
@@ -144,6 +144,7 @@ public class AgentController : MonoBehaviour
             if(model.currentStep >= maxSteps || model.droppedBoxes >= NBoxes)
             {
                 currentStep.text += "\nSimulation complete.";
+                reloadButton.SetActive(true);
             }
             else
             {
@@ -153,6 +154,13 @@ public class AgentController : MonoBehaviour
         }
     }
 
+    public void InitialConfiguration()
+    {
+        GameObject[] robots = GameObject.FindGameObjectsWithTag("Robot");
+        foreach(GameObject robot in robots)
+            GameObject.Destroy(robot);
+        StartCoroutine(SendConfiguration());
+    }
     IEnumerator SendConfiguration()
     {
         WWWForm form = new WWWForm();
